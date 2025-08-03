@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+from dotenv import load_dotenv
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,12 +23,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-f9^ngr8fzldt(jjiw^)37&zoh6lqmpk%hb632&3-c#re+j^d4%'
-
+SECRET_KEY = os.getenv('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -58,7 +59,9 @@ MIDDLEWARE = [
 AUTHENTICATION_BACKENDS = [
     'social_core.backends.google.GoogleOAuth2',
     'social_core.backends.facebook.FacebookOAuth2',
-    'social_core.backends.linkedin.LinkedinOAuth2',
+    'social_core.backends.linkedin.LinkedinOpenIdConnect',
+    'social_core.backends.twitter.TwitterOAuth',
+    'social_core.backends.github.GithubOAuth2',
     'social_core.backends.twitter.TwitterOAuth',
     'django.contrib.auth.backends.ModelBackend',
 ]
@@ -137,26 +140,53 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-
-# Google
-SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = 'your-client-id'
-SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = 'your-client-secret'
-
-# Facebook
-SOCIAL_AUTH_FACEBOOK_KEY = 'your-app-id'
-SOCIAL_AUTH_FACEBOOK_SECRET = 'your-app-secret'
-
 # LinkedIn
-SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY = 'your-client-id'
-SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET = 'your-client-secret'
+SESSION_COOKIE_AGE = 3600
+SESSION_SAVE_EVERY_REQUEST = True
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+SESSION_COOKIE_SECURE = False  # Set to True in production with HTTPS
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 
-# Twitter
-SOCIAL_AUTH_TWITTER_KEY = 'your-api-key'
-SOCIAL_AUTH_TWITTER_SECRET = 'your-api-secret'
+# Social Auth general
+SOCIAL_AUTH_REDIRECT_IS_HTTPS = False 
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 
+# Social Auth specific settings
+SOCIAL_AUTH_REDIRECT_IS_HTTPS = False  # Set to True in production
+SOCIAL_AUTH_LINKEDIN_OAUTH2_IGNORE_DEFAULT_SCOPE = True
+SOCIAL_AUTH_LINKEDIN_OPENIDCONNECT_SCOPE = ['openid', 'email', 'profile']
+SOCIAL_AUTH_LINKEDIN_OAUTH2_FIELD_SELECTORS = ['emailAddress', 'formatted-name', 'public-profile-url', 'picture-url']
+SOCIAL_AUTH_LINKEDIN_OPENIDCONNECT_EXTRA_DATA = [
+    ('sub', 'id'),
+    ('email', 'email'),
+    ('given_name', 'first_name'),
+    ('family_name', 'last_name'),
+    ('picture', 'avatar'),
+]
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.getenv('SOCIAL_AUTH_GOOGLE_OAUTH2_KEY')
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.getenv('SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET')
 
+SOCIAL_AUTH_FACEBOOK_KEY = os.getenv('SOCIAL_AUTH_FACEBOOK_KEY')
+SOCIAL_AUTH_FACEBOOK_SECRET = os.getenv('SOCIAL_AUTH_FACEBOOK_SECRET')
+
+SOCIAL_AUTH_LINKEDIN_OPENIDCONNECT_KEY = os.getenv('SOCIAL_AUTH_LINKEDIN_OPENIDCONNECT_KEY')
+SOCIAL_AUTH_LINKEDIN_OPENIDCONNECT_SECRET = os.getenv('SOCIAL_AUTH_LINKEDIN_OPENIDCONNECT_SECRET')
+
+SOCIAL_AUTH_GITHUB_KEY = os.getenv('SOCIAL_AUTH_GITHUB_KEY')
+SOCIAL_AUTH_GITHUB_SECRET = os.getenv('SOCIAL_AUTH_GITHUB_SECRET')
+
+SOCIAL_AUTH_TWITTER_KEY = os.getenv('SOCIAL_AUTH_TWITTER_KEY')
+SOCIAL_AUTH_TWITTER_SECRET = os.getenv('SOCIAL_AUTH_TWITTER_SECRET')
 
 TEMPLATES[0]['OPTIONS']['context_processors'] += [
     'social_django.context_processors.backends',
     'social_django.context_processors.login_redirect',
 ]
+
+
+
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/'
+LOGIN_ERROR_URL = '/login-error/'
