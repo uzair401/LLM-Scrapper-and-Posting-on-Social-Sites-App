@@ -1,0 +1,157 @@
+<!-- templates/saved_posts.html -->
+<div class="max-w-6xl mx-auto space-y-6">
+    <!-- Header -->
+    <div class="flex justify-between items-center">
+        <div>
+            <h2 class="text-2xl font-bold text-gray-800">Saved Posts</h2>
+            <p class="text-gray-600">Your collection of generated content</p>
+        </div>
+        
+        <!-- Filter Tabs -->
+        <div class="flex space-x-1 bg-gray-100 rounded-lg p-1">
+            <button class="px-4 py-2 rounded-md text-sm font-medium filter-tab active" data-filter="all">
+                All
+            </button>
+            <button class="px-4 py-2 rounded-md text-sm font-medium filter-tab" data-filter="twitter">
+                Twitter
+            </button>
+            <button class="px-4 py-2 rounded-md text-sm font-medium filter-tab" data-filter="linkedin">
+                LinkedIn
+            </button>
+            <button class="px-4 py-2 rounded-md text-sm font-medium filter-tab" data-filter="facebook">
+                Facebook
+            </button>
+        </div>
+    </div>
+
+    <!-- Posts Grid -->
+    {% if saved_posts %}
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6" id="posts-grid">
+        {% for post in saved_posts %}
+        <div class="post-item bg-white rounded-xl shadow-sm border" data-platform="{{ post.platform }}">
+            <!-- Post Header -->
+            <div class="flex items-center justify-between p-4 border-b bg-gray-50">
+                <div class="flex items-center space-x-3">
+                    {% if post.platform == 'twitter' %}
+                        <i class="fab fa-twitter text-blue-500"></i>
+                        <span class="font-medium text-gray-800">Twitter</span>
+                    {% elif post.platform == 'linkedin' %}
+                        <i class="fab fa-linkedin text-blue-700"></i>
+                        <span class="font-medium text-gray-800">LinkedIn</span>
+                    {% elif post.platform == 'facebook' %}
+                        <i class="fab fa-facebook text-blue-600"></i>
+                        <span class="font-medium text-gray-800">Facebook</span>
+                    {% endif %}
+                </div>
+                
+                <div class="flex items-center space-x-2 text-sm text-gray-500">
+                    <i class="fas fa-clock"></i>
+                    <span>{{ post.created_at|timesince }} ago</span>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="p-4">
+                <div class="text-gray-800 whitespace-pre-wrap mb-4">{{ post.content|truncatewords:30 }}</div>
+                
+                {% if post.hashtags %}
+                <div class="flex flex-wrap gap-1 mb-4">
+                    {% for hashtag in post.hashtags %}
+                    <span class="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">#{{ hashtag }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <!-- Post Actions -->
+                <div class="flex space-x-2">
+                    <button class="flex-1 px-3 py-2 text-gray-600 border border-gray-300 rounded hover:bg-gray-50 text-sm"
+                            hx-get="{% url 'edit_post' post.id %}" 
+                            hx-target="#edit-modal" 
+                            hx-swap="innerHTML">
+                        <i class="fas fa-edit mr-1"></i>Edit
+                    </button>
+                    
+                    <button class="flex-1 gradient-btn px-3 py-2 text-white rounded text-sm"
+                            hx-post="{% url 'publish_post' %}" 
+                            hx-vals='{"post_id": "{{ post.id }}"}' 
+                            hx-confirm="Publish this post to {{ post.platform|title }}?">
+                        <i class="fas fa-share mr-1"></i>Publish
+                    </button>
+                    
+                    <button class="px-3 py-2 text-red-600 border border-red-300 rounded hover:bg-red-50 text-sm"
+                            hx-delete="{% url 'delete_post' post.id %}" 
+                            hx-target="closest .post-item" 
+                            hx-swap="outerHTML" 
+                            hx-confirm="Are you sure you want to delete this post?">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Source Info -->
+            {% if post.source_url %}
+            <div class="px-4 pb-4">
+                <div class="text-xs text-gray-500 bg-gray-50 rounded p-2">
+                    <i class="fas fa-link mr-1"></i>
+                    <a href="{{ post.source_url }}" target="_blank" class="hover:text-gray-700">
+                        {{ post.source_title|default:post.source_url|truncatechars:50 }}
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="text-center py-12">
+        <i class="fas fa-bookmark text-gray-400 text-4xl mb-4"></i>
+        <h3 class="text-lg font-medium text-gray-800 mb-2">No saved posts yet</h3>
+        <p class="text-gray-600 mb-6">Start by scraping some content and saving the generated posts</p>
+        <button class="gradient-btn px-6 py-3 text-white rounded-lg"
+                hx-get="{% url 'scrape_new' %}" hx-target="#main-content">
+            <i class="fas fa-plus mr-2"></i>
+            Create Your First Post
+        </button>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Edit Modal Container -->
+<div id="edit-modal"></div>
+
+<script>
+// Platform filter functionality
+document.querySelectorAll('.filter-tab').forEach(tab => {
+    tab.addEventListener('click', function() {
+        // Update active tab
+        document.querySelectorAll('.filter-tab').forEach(t => {
+            t.classList.remove('active', 'bg-white', 'text-gray-800');
+            t.classList.add('text-gray-600');
+        });
+        this.classList.add('active', 'bg-white', 'text-gray-800');
+        this.classList.remove('text-gray-600');
+        
+        // Filter posts
+        const filter = this.dataset.filter;
+        document.querySelectorAll('.post-item').forEach(post => {
+            if (filter === 'all' || post.dataset.platform === filter) {
+                post.style.display = 'block';
+            } else {
+                post.style.display = 'none';
+            }
+        });
+    });
+});
+</script>
+
+<style>
+.filter-tab.active {
+    background: white;
+    color: #374151;
+}
+
+.filter-tab {
+    color: #6b7280;
+}
+</style>

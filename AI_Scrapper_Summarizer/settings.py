@@ -190,3 +190,7 @@ TEMPLATES[0]['OPTIONS']['context_processors'] += [
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 LOGIN_ERROR_URL = '/login-error/'
+# Add these lines to your settings.py file
+LOGIN_URL = 'signin'  # This tells Django where to redirect for login
+LOGIN_REDIRECT_URL = 'home'  # Where to go after successful login
+LOGOUT_REDIRECT_URL = 'signin'  # Where to go after logout

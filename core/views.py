@@ -2,9 +2,13 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from .forms import SignupForm, SigninForm
 from django.http import HttpResponse
+from django.contrib.auth.decorators import login_required
 
 
 def signup_view(request):
+    if request.user.is_authenticated:
+        return redirect('home')
+
     if request.method == 'POST':
         form = SignupForm(request.POST)
         if form.is_valid():
@@ -25,6 +29,9 @@ def signup_view(request):
 
 
 def signin_view(request):
+    if request.user.is_authenticated:
+        return redirect('home')
+
     if request.method == 'POST':
         form = SigninForm(request, data=request.POST)
         if form.is_valid():
@@ -38,8 +45,9 @@ def signin_view(request):
 
 def signout_view(request):
     logout(request)
-    return redirect('home')
+    return redirect('signin')
 
 
+@login_required
 def home_view(request):
-    return HttpResponse("Home Page")
+    return render(request, 'home.html', {'user': request.user})

@@ -1,0 +1,102 @@
+<!-- templates/scrape_results.html -->
+<div class="space-y-6">
+    <!-- Source Info -->
+    <div class="bg-white rounded-xl shadow-sm p-6">
+        <div class="flex items-start space-x-4">
+            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                <i class="fas fa-check text-green-600"></i>
+            </div>
+            <div class="flex-1">
+                <h3 class="font-semibold text-gray-800">Content Scraped Successfully</h3>
+                <p class="text-gray-600 text-sm mt-1">{{ scraped_data.title }}</p>
+                <a href="{{ scraped_data.url }}" target="_blank" class="text-indigo-600 hover:text-indigo-800 text-sm">
+                    {{ scraped_data.url|truncatechars:60 }} <i class="fas fa-external-link-alt text-xs"></i>
+                </a>
+            </div>
+            <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
+                {{ scraped_data.word_count }} words
+            </span>
+        </div>
+    </div>
+
+    <!-- Generated Posts -->
+    <div class="space-y-4">
+        {% for post in generated_posts %}
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+            <!-- Platform Header -->
+            <div class="flex items-center justify-between p-4 bg-gray-50 border-b">
+                <div class="flex items-center space-x-3">
+                    {% if post.platform == 'twitter' %}
+                        <i class="fab fa-twitter text-blue-500 text-lg"></i>
+                        <span class="font-medium text-gray-800">Twitter Post</span>
+                    {% elif post.platform == 'linkedin' %}
+                        <i class="fab fa-linkedin text-blue-700 text-lg"></i>
+                        <span class="font-medium text-gray-800">LinkedIn Post</span>
+                    {% elif post.platform == 'facebook' %}
+                        <i class="fab fa-facebook text-blue-600 text-lg"></i>
+                        <span class="font-medium text-gray-800">Facebook Post</span>
+                    {% endif %}
+                    <span class="px-2 py-1 bg-gray-200 text-gray-600 rounded text-xs">
+                        {{ post.content|length }} chars
+                    </span>
+                </div>
+                
+                <div class="flex space-x-2">
+                    <button class="px-3 py-1 text-gray-600 hover:text-gray-800 border border-gray-300 rounded text-sm"
+                            hx-post="{% url 'regenerate_post' %}" 
+                            hx-vals='{"platform": "{{ post.platform }}", "scrape_id": "{{ scraped_data.id }}"}' 
+                            hx-target="#post-{{ post.platform }}" 
+                            hx-swap="outerHTML">
+                        <i class="fas fa-redo text-xs mr-1"></i>Regenerate
+                    </button>
+                    
+                    <button class="px-3 py-1 bg-gray-600 text-white rounded text-sm hover:bg-gray-700"
+                            hx-post="{% url 'save_post' %}" 
+                            hx-vals='{"content": "{{ post.content|escapejs }}", "platform": "{{ post.platform }}"}'>
+                        <i class="fas fa-bookmark text-xs mr-1"></i>Save
+                    </button>
+                    
+                    <button class="gradient-btn px-3 py-1 text-white rounded text-sm"
+                            hx-post="{% url 'publish_post' %}" 
+                            hx-vals='{"content": "{{ post.content|escapejs }}", "platform": "{{ post.platform }}"}' 
+                            hx-confirm="Are you sure you want to publish this post to {{ post.platform|title }}?">
+                        <i class="fas fa-share text-xs mr-1"></i>Publish
+                    </button>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div id="post-{{ post.platform }}" class="p-6">
+                <div class="prose max-w-none">
+                    <div class="whitespace-pre-wrap text-gray-800">{{ post.content }}</div>
+                </div>
+                
+                {% if post.hashtags %}
+                <div class="mt-4 pt-4 border-t">
+                    <div class="flex flex-wrap gap-2">
+                        {% for hashtag in post.hashtags %}
+                        <span class="px-2 py-1 bg-indigo-100 text-indigo-800 rounded text-sm">#{{ hashtag }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="flex space-x-4">
+        <button class="flex-1 px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+                hx-get="{% url 'scrape_new' %}" hx-target="#main-content">
+            <i class="fas fa-plus mr-2"></i>
+            New Scrape
+        </button>
+        
+        <button class="flex-1 gradient-btn px-6 py-3 text-white rounded-lg"
+                hx-get="{% url 'saved_posts' %}" hx-target="#main-content">
+            <i class="fas fa-bookmark mr-2"></i>
+            View Saved Posts
+        </button>
+    </div>
+</div>
